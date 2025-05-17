@@ -32,14 +32,14 @@ async def take_screenshot():
     await asyncio.sleep(3)
 
     # Try to accept the cookie banner
-    try:
-        print("Waiting for cookie banner...")
-        await page.waitForSelector("button#onetrust-accept-btn-handler", timeout=5000)
-        print("Cookie banner found. Clicking Accept...")
-        await page.click("button#onetrust-accept-btn-handler")
-        await asyncio.sleep(2)
-    except Exception as e:
-        print("No cookie banner or error during click:", str(e))
+#    try:
+#        print("Waiting for cookie banner...")
+#        await page.waitForSelector("button#onetrust-accept-btn-handler", timeout=5000)
+#        print("Cookie banner found. Clicking Accept...")
+#        await page.click("button#onetrust-accept-btn-handler")
+#        await asyncio.sleep(2)
+#    except Exception as e:
+#        print("No cookie banner or error during click:", str(e))
 
     # Take full-page screenshot
     try:
