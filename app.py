@@ -12,17 +12,28 @@ IMAGE_PATH = "public/electricity.png"
 TARGET_URL = "https://andelenergi.dk/el/timepris/"
 
 async def take_screenshot():
-    print("🟡 Launching headless browser...")
-    browser = await launch(
-        headless=True,
-        args=['--no-sandbox', '--disable-setuid-sandbox']
-    )
-    page = await browser.newPage()
-    await page.setViewport({'width': 1200, 'height': 900})
+    print("🟠 Starting take_screenshot()...")
 
-    print("🟡 Navigating to page:", TARGET_URL)
-    await page.goto(TARGET_URL, {'waitUntil': 'networkidle2'})
-    await asyncio.sleep(5)  # Give extra time for JS and widgets
+    try:
+        print("🟡 Launching headless browser...")
+        browser = await launch(
+            headless=True,
+            args=['--no-sandbox', '--disable-setuid-sandbox']
+        )
+    except Exception as e:
+        print(f"❌ Failed to launch browser: {e}")
+        return
+
+    try:
+        page = await browser.newPage()
+        await page.setViewport({'width': 1200, 'height': 900})
+        print("🟡 Navigating to page:", TARGET_URL)
+        await page.goto(TARGET_URL, {'waitUntil': 'networkidle2'})
+        await asyncio.sleep(5)
+    except Exception as e:
+        print(f"❌ Failed during navigation: {e}")
+        await browser.close()
+        return
 
     try:
         print("🟡 Waiting for canvas element...")
@@ -34,6 +45,8 @@ async def take_screenshot():
             print("✅ Screenshot saved to screenshot.png")
         else:
             print("❌ Canvas element not found.")
+            await browser.close()
+            return
     except Exception as e:
         print(f"❌ Error during canvas screenshot: {e}")
         await browser.close()
