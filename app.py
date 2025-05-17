@@ -9,32 +9,38 @@ IMAGE_PATH = "public/electricity.png"
 # Create a process pool to run screenshot code in a separate process
 executor = concurrent.futures.ProcessPoolExecutor()
 
-def run_screenshot_sync():
-    import asyncio
+async def take_screenshot():
     from pyppeteer import launch
     from PIL import Image
+    import os
+    import asyncio
 
-    async def take_screenshot():
-        print("Launching browser...")
-        browser = await launch(
-            headless=True,
-            args=['--no-sandbox', '--disable-setuid-sandbox']
-        )
-        page = await browser.newPage()
-        await page.setViewport({'width': 1200, 'height': 900})
-        print(f"Opening {TARGET_URL} ...")
-        await page.goto(TARGET_URL)
-        await asyncio.sleep(5)
-        print("Taking screenshot...")
-        await page.screenshot({'path': 'screenshot.png'})
-        await browser.close()
+    browser = await launch(
+        headless=True,
+        args=['--no-sandbox', '--disable-setuid-sandbox']
+    )
+    page = await browser.newPage()
+    await page.setViewport({'width': 1200, 'height': 900})
 
-        print("Processing image...")
-        os.makedirs("public", exist_ok=True)
-        img = Image.open("screenshot.png").convert("L")
-        img = img.resize((600, 448), Image.LANCZOS)
-        img.save(IMAGE_PATH)
-        print("Image saved to:", IMAGE_PATH)
+    TARGET_URL = "https://andelenergi.dk/el/timepris/"
+    await page.goto(TARGET_URL, {'waitUntil': 'networkidle2'})
+    await asyncio.sleep(5)
+
+    # Optionally accept cookie banner here (see earlier cookie handling)
+    # ...
+
+    await page.waitForSelector("canvas", timeout=10000)
+    element = await page.querySelector("canvas")
+    await element.screenshot({'path': 'screenshot.png'})
+
+    await browser.close()
+
+    os.makedirs("public", exist_ok=True)
+    img = Image.open("screenshot.png").convert("L")
+    img = img.resize((600, 448), Image.LANCZOS)
+    img.save("public/electricity.png")
+    print("Saved screenshot to public/electricity.png")
+
 
     asyncio.run(take_screenshot())
 
