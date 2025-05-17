@@ -1,42 +1,42 @@
-import asyncio
 import os
 import concurrent.futures
 from flask import Flask, send_file
-from pyppeteer import launch
-from PIL import Image
 
 app = Flask(__name__)
 TARGET_URL = "https://andelenergi.dk"
 IMAGE_PATH = "public/electricity.png"
 
-executor = concurrent.futures.ThreadPoolExecutor()
+# Create a process pool to run screenshot code in a separate process
+executor = concurrent.futures.ProcessPoolExecutor()
 
-async def take_screenshot():
-    try:
-        print("Starting browser...")
+def run_screenshot_sync():
+    import asyncio
+    from pyppeteer import launch
+    from PIL import Image
+
+    async def take_screenshot():
+        print("Launching browser...")
         browser = await launch(
             headless=True,
             args=['--no-sandbox', '--disable-setuid-sandbox']
         )
         page = await browser.newPage()
         await page.setViewport({'width': 1200, 'height': 900})
-        print(f"Loading page {TARGET_URL} ...")
+        print(f"Opening {TARGET_URL} ...")
         await page.goto(TARGET_URL)
-        await asyncio.sleep(5)  # wait for page to load
-
+        await asyncio.sleep(5)
         print("Taking screenshot...")
         await page.screenshot({'path': 'screenshot.png'})
         await browser.close()
 
-        print("Resizing image...")
+        print("Processing image...")
         os.makedirs("public", exist_ok=True)
-        img = Image.open("screenshot.png").convert("L")  # grayscale
+        img = Image.open("screenshot.png").convert("L")
         img = img.resize((600, 448), Image.LANCZOS)
         img.save(IMAGE_PATH)
-        print("Image saved.")
-    except Exception as e:
-        print(f"Error during screenshot: {e}")
-        raise
+        print("Image saved to:", IMAGE_PATH)
+
+    asyncio.run(take_screenshot())
 
 @app.route("/")
 def home():
@@ -45,8 +45,8 @@ def home():
 @app.route("/refresh")
 def refresh_image():
     try:
-        future = executor.submit(lambda: asyncio.run(take_screenshot()))
-        future.result()  # wait for it to finish
+        future = executor.submit(run_screenshot_sync)
+        future.result()
         return "Screenshot refreshed!"
     except Exception as e:
         return f"Failed to refresh screenshot: {e}", 500
