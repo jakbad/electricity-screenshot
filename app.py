@@ -32,7 +32,23 @@ async def take_screenshot():
     print(f"Saved screenshot to {IMAGE_PATH}")
 
 def run_screenshot_sync():
-    asyncio.run(take_screenshot())
+    loop = None
+    try:
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        # no event loop in this thread
+        pass
+
+    if loop and loop.is_running():
+        # If event loop already running, create a new one temporarily
+        new_loop = asyncio.new_event_loop()
+        try:
+            return new_loop.run_until_complete(take_screenshot())
+        finally:
+            new_loop.close()
+    else:
+        # No event loop running, safe to run normally
+        return asyncio.run(take_screenshot())
 
 @app.route('/refresh')
 def refresh():
