@@ -3,7 +3,7 @@ import concurrent.futures
 from flask import Flask, send_file
 
 app = Flask(__name__)
-TARGET_URL = "https://andelenergi.dk"
+TARGET_URL = "https://andelenergi.dk/el/timepris/"
 IMAGE_PATH = "public/electricity.png"
 
 # Create a process pool to run screenshot code in a separate process
@@ -14,27 +14,38 @@ def run_screenshot_sync():
     from pyppeteer import launch
     from PIL import Image
 
-    async def take_screenshot():
-        print("Launching browser...")
-        browser = await launch(
-            headless=True,
-            args=['--no-sandbox', '--disable-setuid-sandbox']
-        )
-        page = await browser.newPage()
-        await page.setViewport({'width': 1200, 'height': 900})
-        print(f"Opening {TARGET_URL} ...")
-        await page.goto(TARGET_URL)
-        await asyncio.sleep(5)
-        print("Taking screenshot...")
-        await page.screenshot({'path': 'screenshot.png'})
-        await browser.close()
+async def take_screenshot():
+    print("Launching browser...")
+    browser = await launch(
+        headless=True,
+        args=['--no-sandbox', '--disable-setuid-sandbox']
+    )
+    page = await browser.newPage()
+    await page.setViewport({'width': 1200, 'height': 900})
+    print(f"Opening {TARGET_URL} ...")
+    await page.goto(TARGET_URL)
+    await asyncio.sleep(3)
 
-        print("Processing image...")
-        os.makedirs("public", exist_ok=True)
-        img = Image.open("screenshot.png").convert("L")
-        img = img.resize((600, 448), Image.LANCZOS)
-        img.save(IMAGE_PATH)
-        print("Image saved to:", IMAGE_PATH)
+    # Try to click cookie accept button if it exists
+    try:
+        await page.waitForSelector("button#onetrust-accept-btn-handler", timeout=5000)
+        print("Cookie banner detected. Accepting...")
+        await page.click("button#onetrust-accept-btn-handler")
+        await asyncio.sleep(1)
+    except Exception:
+        print("No cookie banner found or already accepted.")
+
+    print("Taking screenshot...")
+    await page.screenshot({'path': 'screenshot.png'})
+    await browser.close()
+
+    print("Processing image...")
+    os.makedirs("public", exist_ok=True)
+    img = Image.open("screenshot.png").convert("L")
+    img = img.resize((600, 448), Image.LANCZOS)
+    img.save(IMAGE_PATH)
+    print("Image saved to:", IMAGE_PATH)
+
 
     asyncio.run(take_screenshot())
 
