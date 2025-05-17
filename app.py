@@ -42,7 +42,10 @@ def home():
 @app.route("/refresh")
 def refresh_image():
     try:
-        asyncio.run(take_screenshot())
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(take_screenshot())
+        loop.close()
         return "Screenshot refreshed!"
     except Exception as e:
         return f"Failed to refresh screenshot: {e}", 500
