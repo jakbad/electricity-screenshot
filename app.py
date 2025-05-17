@@ -1,8 +1,11 @@
 from flask import Flask, send_file
 import asyncio
+import nest_asyncio  # <--- NEW
 from pyppeteer import launch
 from PIL import Image
 import os
+
+nest_asyncio.apply()  # <--- NEW
 
 app = Flask(__name__)
 IMAGE_PATH = "public/electricity.png"
@@ -16,9 +19,8 @@ async def take_screenshot():
     page = await browser.newPage()
     await page.setViewport({'width': 1200, 'height': 900})
     await page.goto(TARGET_URL, {'waitUntil': 'networkidle2'})
-    await asyncio.sleep(5)  # wait for page to load
+    await asyncio.sleep(5)
 
-    # Wait for the canvas price widget to appear
     await page.waitForSelector("canvas", timeout=10000)
     element = await page.querySelector("canvas")
     await element.screenshot({'path': 'screenshot.png'})
@@ -32,23 +34,7 @@ async def take_screenshot():
     print(f"Saved screenshot to {IMAGE_PATH}")
 
 def run_screenshot_sync():
-    loop = None
-    try:
-        loop = asyncio.get_event_loop()
-    except RuntimeError:
-        # no event loop in this thread
-        pass
-
-    if loop and loop.is_running():
-        # If event loop already running, create a new one temporarily
-        new_loop = asyncio.new_event_loop()
-        try:
-            return new_loop.run_until_complete(take_screenshot())
-        finally:
-            new_loop.close()
-    else:
-        # No event loop running, safe to run normally
-        return asyncio.run(take_screenshot())
+    return asyncio.get_event_loop().run_until_complete(take_screenshot())
 
 @app.route('/refresh')
 def refresh():
