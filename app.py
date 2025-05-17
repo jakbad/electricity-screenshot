@@ -1,5 +1,6 @@
 import asyncio
 import os
+import concurrent.futures
 from flask import Flask, send_file
 from pyppeteer import launch
 from PIL import Image
@@ -7,6 +8,8 @@ from PIL import Image
 app = Flask(__name__)
 TARGET_URL = "https://andelenergi.dk"
 IMAGE_PATH = "public/electricity.png"
+
+executor = concurrent.futures.ThreadPoolExecutor()
 
 async def take_screenshot():
     try:
@@ -20,7 +23,7 @@ async def take_screenshot():
         print(f"Loading page {TARGET_URL} ...")
         await page.goto(TARGET_URL)
         await asyncio.sleep(5)  # wait for page to load
-        
+
         print("Taking screenshot...")
         await page.screenshot({'path': 'screenshot.png'})
         await browser.close()
@@ -42,10 +45,8 @@ def home():
 @app.route("/refresh")
 def refresh_image():
     try:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        loop.run_until_complete(take_screenshot())
-        loop.close()
+        future = executor.submit(lambda: asyncio.run(take_screenshot()))
+        future.result()  # wait for it to finish
         return "Screenshot refreshed!"
     except Exception as e:
         return f"Failed to refresh screenshot: {e}", 500
