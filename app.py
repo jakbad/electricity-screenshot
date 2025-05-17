@@ -13,7 +13,6 @@ async def take_screenshot():
         print("Starting browser...")
         browser = await launch(
             headless=True,
-            executablePath="/usr/bin/chromium",  # Render’s chromium
             args=['--no-sandbox', '--disable-setuid-sandbox']
         )
         page = await browser.newPage()
