@@ -4,72 +4,50 @@ import nest_asyncio  # <--- NEW
 from pyppeteer import launch
 from PIL import Image
 import os
-
+import psutil
 nest_asyncio.apply()  # <--- NEW
 
 app = Flask(__name__)
 IMAGE_PATH = "public/electricity.png"
 TARGET_URL = "https://andelenergi.dk/el/timepris/"
 
-async def take_screenshot():
-    print("🟠 Starting take_screenshot()...")
 
+
+def log_memory_usage(stage=""):
+    mem = psutil.virtual_memory()
+    print(f"[{stage}] Memory usage: {mem.percent}% used, {mem.available / 1024 ** 2:.1f} MB available")
+
+async def take_screenshot():
     try:
-        print("🟡 Launching headless browser...")
+        print("🟠 Starting take_screenshot()...")
+        log_memory_usage("Before launching browser")
+
         browser = await launch(
             headless=True,
-            args=['--no-sandbox', '--disable-setuid-sandbox']
+            args=[
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage',
+                '--disable-gpu',
+                '--single-process',
+                '--no-zygote',
+            ]
         )
-    except Exception as e:
-        print(f"❌ Failed to launch browser: {e}")
-        return
+        log_memory_usage("After launching browser")
 
-    try:
         page = await browser.newPage()
-        await page.setViewport({'width': 1200, 'height': 900})
-        print("🟡 Navigating to page:", TARGET_URL)
-        await page.goto(TARGET_URL, {'waitUntil': 'networkidle2'})
-        await asyncio.sleep(5)
-    except Exception as e:
-        print(f"❌ Failed during navigation: {e}")
+        await page.setViewport({'width': 1280, 'height': 1024})
+        print("🟡 Navigating to URL...")
+        await page.goto('https://andelenergi.dk/el/timepris/', {'waitUntil': 'networkidle2'})
+        await asyncio.sleep(5)  # Allow time for rendering
+
+        print("📸 Taking screenshot...")
+        await page.screenshot({'path': 'screenshot.png', 'fullPage': True})
+
         await browser.close()
-        return
-
-    try:
-        print("🟡 Waiting for canvas element...")
-        await page.waitForSelector("canvas", timeout=10000)
-        element = await page.querySelector("canvas")
-        if element:
-            print("🟢 Canvas element found. Taking screenshot...")
-            await element.screenshot({'path': 'screenshot.png'})
-            print("✅ Screenshot saved to screenshot.png")
-        else:
-            print("❌ Canvas element not found.")
-            await browser.close()
-            return
+        print("✅ Screenshot saved as screenshot.png")
     except Exception as e:
-        print(f"❌ Error during canvas screenshot: {e}")
-        await browser.close()
-        return
-
-    await browser.close()
-    print("🟢 Browser closed.")
-
-    try:
-        exists = os.path.exists("screenshot.png")
-        print("📷 Screenshot file exists:", exists)
-
-        os.makedirs("public", exist_ok=True)
-
-        if exists:
-            img = Image.open("screenshot.png").convert("L")
-            img = img.resize((600, 448), Image.LANCZOS)
-            img.save(IMAGE_PATH)
-            print(f"✅ Processed and saved image to {IMAGE_PATH}")
-        else:
-            print("❌ screenshot.png does not exist. Aborting image processing.")
-    except Exception as e:
-        print(f"❌ Failed to process or save screenshot: {e}")
+        print(f"❌ Failed to take screenshot: {e}")
 
 
 def run_screenshot_sync():
