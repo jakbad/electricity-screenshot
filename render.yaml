@@ -1,10 +1,20 @@
+#services:
+#  - type: web
+#    name: electricity-price-api
+#    env: python
+#    buildCommand: pip install -r requirements.txt
+#    startCommand: python app.py
+#    envVars:
+#      - key: PORT
+#        value: 10000
+#    plan: free
+
 services:
   - type: web
-    name: electricity-price-api
+    name: elspot-prices
     env: python
     buildCommand: pip install -r requirements.txt
     startCommand: python app.py
     envVars:
-      - key: PORT
-        value: 10000
-    plan: free
+      - key: PYTHONUNBUFFERED
+        value: "TRUE"
