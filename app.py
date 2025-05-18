@@ -15,7 +15,7 @@ def index():
 
     for record in records:
         price = record.get('SpotPriceDKK')
-        hour = record.get('HourDK')
+        hour = record.get('HourUTC')
         html += f"<li>Time: {hour} | Price: {price} DKK/MWh</li>"
 
     html += "</ul>"
