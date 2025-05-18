@@ -18,6 +18,4 @@ services:
     envVars:
       - key: PYTHONUNBUFFERED
         value: "TRUE"
-      - key: PORT
-        value: 10000
-    plan: free
+        
