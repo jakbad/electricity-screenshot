@@ -1,69 +1,37 @@
-from flask import Flask, render_template_string, send_file
-import requests
-from datetime import datetime
+from flask import Flask, send_file
 import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-import io
+import requests
+from io import BytesIO
+from datetime import datetime
 
 app = Flask(__name__)
 
-
-app.run(host="0.0.0.0", port=port, debug=True)
-port = int(os.environ.get("PORT", 5000))
-
-
-API_URL = "https://api.energidataservice.dk/dataset/Elspotprices?limit=24&filter={%22PriceArea%22:%22DK2%22}"
-
-def fetch_elspot_data():
-    response = requests.get(API_URL)
-    data = response.json()
-    return data.get("records", [])
-
 @app.route("/")
-def index():
-    records = fetch_elspot_data()
-    prices = [
-        f"{rec['SpotPriceDKK']} DKK/MWh | Time: {rec['HourUTC']}"
-        for rec in records
-    ]
-    html = """
-    <h1>Latest Electricity Prices</h1>
-    <ul>
-        {% for price in prices %}
-            <li>{{ price }}</li>
-        {% endfor %}
-    </ul>
-    <p><a href="/image">View Graph</a></p>
-    """
-    return render_template_string(html, prices=prices)
+def graph():
+    url = "https://api.energidataservice.dk/dataset/Elspotprices?limit=24&filter={\"PriceArea\":\"DK2\"}&sort=HourUTC DESC"
+    response = requests.get(url)
+    data = response.json().get("records", [])
 
-def create_price_plot(records):
-    # Parse times and prices
-    times = [datetime.fromisoformat(rec["HourUTC"]) for rec in records]
-    prices = [rec["SpotPriceDKK"] for rec in records]
+    # Sort records by HourUTC ascending
+    data.sort(key=lambda x: x["HourUTC"])
 
-    # Create the plot
-    fig, ax = plt.subplots(figsize=(6, 4.48), dpi=100)  # 600x448 pixels
-    ax.plot(times, prices, marker='o', color='black')
+    times = [datetime.fromisoformat(rec["HourUTC"]).strftime("%H:%M") for rec in data]
+    prices = [rec["SpotPriceDKK"] for rec in data]
 
-    # Formatting
-    ax.set_title("Elspot Prices", fontsize=10)
-    ax.set_xlabel("Time", fontsize=8)
-    ax.set_ylabel("Price (DKK/MWh)", fontsize=8)
-    ax.tick_params(axis='both', which='major', labelsize=6)
-    ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
-    fig.tight_layout()
+    plt.figure(figsize=(10, 4))
+    plt.plot(times, prices, marker='o')
+    plt.title("Electricity Prices (DKK/MWh)")
+    plt.xlabel("Time (UTC)")
+    plt.ylabel("Price")
+    plt.xticks(rotation=45)
+    plt.tight_layout()
 
-    # Save to in-memory buffer
-    buf = io.BytesIO()
-    plt.savefig(buf, format='png', dpi=100)
+    buf = BytesIO()
+    plt.savefig(buf, format='png')
     buf.seek(0)
-    plt.close(fig)
+    plt.close()
 
-    return buf
-
-@app.route("/image")
-def image():
-    records = fetch_elspot_data()
-    buf = create_price_plot(records)
     return send_file(buf, mimetype='image/png')
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
