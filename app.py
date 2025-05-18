@@ -18,12 +18,14 @@ def graph():
     times = [datetime.fromisoformat(rec["HourUTC"]).strftime("%H:%M") for rec in data]
     prices = [rec["SpotPriceDKK"] for rec in data]
 
-    plt.figure(figsize=(10, 4))
+    # Inky Frame 5.7: 600x448 pixels
+    plt.figure(figsize=(6, 4.48), dpi=100)
     plt.plot(times, prices, marker='o')
-    plt.title("Electricity Prices (DKK/MWh)")
-    plt.xlabel("Time (UTC)")
-    plt.ylabel("Price")
-    plt.xticks(rotation=45)
+    plt.title("Electricity Prices (DKK/MWh)", fontsize=14)
+    plt.xlabel("Time (UTC)", fontsize=12)
+    plt.ylabel("Price", fontsize=12)
+    plt.xticks(rotation=45, fontsize=8)
+    plt.yticks(fontsize=10)
     plt.tight_layout()
 
     buf = BytesIO()
