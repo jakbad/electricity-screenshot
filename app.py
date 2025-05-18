@@ -7,6 +7,11 @@ import io
 
 app = Flask(__name__)
 
+
+app.run(host="0.0.0.0", port=port, debug=True)
+port = int(os.environ.get("PORT", 5000))
+
+
 API_URL = "https://api.energidataservice.dk/dataset/Elspotprices?limit=24&filter={%22PriceArea%22:%22DK2%22}"
 
 def fetch_elspot_data():
