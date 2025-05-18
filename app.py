@@ -38,4 +38,27 @@ def create_price_plot(records):
     prices = [rec["SpotPriceDKK"] for rec in records]
 
     # Create the plot
-    fig, ax = plt.subplots(figsize=(6,
+    fig, ax = plt.subplots(figsize=(6, 4.48), dpi=100)  # 600x448 pixels
+    ax.plot(times, prices, marker='o', color='black')
+
+    # Formatting
+    ax.set_title("Elspot Prices", fontsize=10)
+    ax.set_xlabel("Time", fontsize=8)
+    ax.set_ylabel("Price (DKK/MWh)", fontsize=8)
+    ax.tick_params(axis='both', which='major', labelsize=6)
+    ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
+    fig.tight_layout()
+
+    # Save to in-memory buffer
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png', dpi=100)
+    buf.seek(0)
+    plt.close(fig)
+
+    return buf
+
+@app.route("/image")
+def image():
+    records = fetch_elspot_data()
+    buf = create_price_plot(records)
+    return send_file(buf, mimetype='image/png')
