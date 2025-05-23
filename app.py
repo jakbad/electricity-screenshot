@@ -7,7 +7,7 @@ import os
 
 app = Flask(__name__)
 
-def generate_plot(save_path=None):
+def generate_plot(save_path=None, nuclear_ref=300):
     url = "https://api.energidataservice.dk/dataset/Elspotprices?limit=24&filter={\"PriceArea\":\"DK2\"}&sort=HourUTC DESC"
     response = requests.get(url)
     data = response.json().get("records", [])
@@ -15,23 +15,41 @@ def generate_plot(save_path=None):
     # Sort by HourUTC ascending
     data.sort(key=lambda x: x["HourUTC"])
 
-    times = [datetime.fromisoformat(rec["HourUTC"]).strftime("%H:%M") for rec in data]
+    times_raw = [datetime.fromisoformat(rec["HourUTC"]) for rec in data]
+    times = [t.strftime("%b %d %H:%M") for t in times_raw]
     prices = [rec["SpotPriceDKK"] for rec in data]
 
+    now_str = datetime.now().strftime("Generated %Y-%m-%d %H:%M")
+
     plt.figure(figsize=(6, 4.48), dpi=100)
-    plt.plot(times, prices, marker='o')
-    plt.title("Electricity Prices (DKK/MWh)", fontsize=14)
-    plt.xlabel("Time (UTC)", fontsize=12)
-    plt.ylabel("Price", fontsize=12)
+    plt.plot(times, prices, marker='o', linestyle='-', color='black', label='Electricity Price')
+
+    # Add reference line for nuclear cost
+    plt.axhline(y=nuclear_ref, color='gray', linestyle='--', linewidth=1)
+    plt.text(len(times) - 1.5, nuclear_ref + 10, f'Nuclear Reference ({nuclear_ref} DKK/MWh)', fontsize=8, color='gray', ha='right')
+
+    # Annotate min and max
+    min_idx = prices.index(min(prices))
+    max_idx = prices.index(max(prices))
+    plt.annotate(f"Min: {prices[min_idx]:.1f}", xy=(min_idx, prices[min_idx]), xytext=(min_idx, prices[min_idx] - 50),
+                 arrowprops=dict(arrowstyle="->", lw=1), fontsize=8)
+    plt.annotate(f"Max: {prices[max_idx]:.1f}", xy=(max_idx, prices[max_idx]), xytext=(max_idx, prices[max_idx] + 50),
+                 arrowprops=dict(arrowstyle="->", lw=1), fontsize=8)
+
+    plt.title(f"Electricity Prices\n{now_str}", fontsize=12)
+    plt.xlabel("Time (UTC)", fontsize=10)
+    plt.ylabel("Price (DKK/MWh)", fontsize=10)
+
     plt.xticks(rotation=45, fontsize=8)
-    plt.yticks(fontsize=10)
+    plt.yticks(fontsize=8)
+    plt.grid(True, linestyle='--', linewidth=0.5, alpha=0.7)
     plt.tight_layout()
 
     if save_path:
-        plt.savefig(save_path, format='png')
+        plt.savefig(save_path, format='png', dpi=100)
     else:
         buf = BytesIO()
-        plt.savefig(buf, format='png')
+        plt.savefig(buf, format='png', dpi=100)
         buf.seek(0)
         plt.close()
         return buf
