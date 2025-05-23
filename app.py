@@ -16,30 +16,29 @@ def generate_plot(save_path=None, nuclear_ref=300):
     data.sort(key=lambda x: x["HourUTC"])
 
     times_raw = [datetime.fromisoformat(rec["HourUTC"]) for rec in data]
-    times = [t.strftime("%b %d %H:%M") for t in times_raw]
+    times = [t.strftime("%H:%M %d/%m") for t in times_raw]
     prices = [rec["SpotPriceDKK"] for rec in data]
 
-    now_str = datetime.now().strftime("Generated %Y-%m-%d %H:%M")
+    timestamp = datetime.now().strftime("Prices as of: %Y-%m-%d %H:%M")
 
     plt.figure(figsize=(6, 4.48), dpi=100)
     plt.plot(times, prices, marker='o', linestyle='-', color='black', label='Electricity Price')
 
-    # Add reference line for nuclear cost
+    # Nuclear reference line
     plt.axhline(y=nuclear_ref, color='gray', linestyle='--', linewidth=1)
-    plt.text(len(times) - 1.5, nuclear_ref + 10, f'Nuclear Reference ({nuclear_ref} DKK/MWh)', fontsize=8, color='gray', ha='right')
+    plt.text(len(times) - 1.5, nuclear_ref + 10, f'Nuclear Ref ({nuclear_ref} DKK/MWh)', fontsize=8, color='gray', ha='right')
 
-    # Annotate min and max
-    min_idx = prices.index(min(prices))
-    max_idx = prices.index(max(prices))
-    plt.annotate(f"Min: {prices[min_idx]:.1f}", xy=(min_idx, prices[min_idx]), xytext=(min_idx, prices[min_idx] - 50),
-                 arrowprops=dict(arrowstyle="->", lw=1), fontsize=8)
-    plt.annotate(f"Max: {prices[max_idx]:.1f}", xy=(max_idx, prices[max_idx]), xytext=(max_idx, prices[max_idx] + 50),
-                 arrowprops=dict(arrowstyle="->", lw=1), fontsize=8)
+    # Annotate min and max with horizontal lines to y-axis
+    min_val = min(prices)
+    max_val = max(prices)
+    plt.hlines(min_val, 0, prices.index(min_val), colors='blue', linestyles='--', linewidth=1)
+    plt.hlines(max_val, 0, prices.index(max_val), colors='red', linestyles='--', linewidth=1)
+    plt.text(0, min_val, f'Min: {min_val:.1f}', va='bottom', fontsize=8, color='blue')
+    plt.text(0, max_val, f'Max: {max_val:.1f}', va='top', fontsize=8, color='red')
 
-    plt.title(f"Electricity Prices\n{now_str}", fontsize=12)
+    plt.title(timestamp, fontsize=12)
     plt.xlabel("Time (UTC)", fontsize=10)
     plt.ylabel("Price (DKK/MWh)", fontsize=10)
-
     plt.xticks(rotation=45, fontsize=8)
     plt.yticks(fontsize=8)
     plt.grid(True, linestyle='--', linewidth=0.5, alpha=0.7)
@@ -55,6 +54,8 @@ def generate_plot(save_path=None, nuclear_ref=300):
         return buf
 
     plt.close()
+
+
 
 @app.route("/")
 def graph_preview():
