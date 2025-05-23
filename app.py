@@ -7,43 +7,60 @@ import os
 
 app = Flask(__name__)
 
-def generate_plot(save_path=None, nuclear_ref=300):
-    url = "https://api.energidataservice.dk/dataset/Elspotprices?limit=24&filter={\"PriceArea\":\"DK2\"}&sort=HourUTC DESC"
+
+def generate_plot(save_path=None, nuclear_ref_kwh=0.3):
+    # Fetch a large enough window
+    url = "https://api.energidataservice.dk/dataset/Elspotprices?limit=100&filter={\"PriceArea\":\"DK2\"}&sort=HourUTC DESC"
     response = requests.get(url)
-    data = response.json().get("records", [])
+    all_data = response.json().get("records", [])
 
-    # Sort by HourUTC ascending
-    data.sort(key=lambda x: x["HourUTC"])
+    # Parse and sort by HourUTC ascending
+    all_data = sorted(all_data, key=lambda x: x["HourUTC"])
+    all_data = [rec for rec in all_data if "HourUTC" in rec and "SpotPriceDKK" in rec]
 
+    # Determine time window
+    latest_time = max(datetime.fromisoformat(rec["HourUTC"]) for rec in all_data)
+    day_before = (datetime.utcnow() - timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+
+    # Filter to time window
+    data = [
+        rec for rec in all_data
+        if day_before <= datetime.fromisoformat(rec["HourUTC"]) <= latest_time
+    ]
+
+    # Extract time and price
     times_raw = [datetime.fromisoformat(rec["HourUTC"]) for rec in data]
     times = [t.strftime("%H:%M %d/%m") for t in times_raw]
-    prices = [rec["SpotPriceDKK"] for rec in data]
+    prices = [rec["SpotPriceDKK"] / 1000 for rec in data]  # DKK/kWh
 
-    timestamp = datetime.now().strftime("Prices as of: %Y-%m-%d %H:%M")
+    # Begin plot
+    timestamp = f"Prices: {day_before.strftime('%d/%m')} – {latest_time.strftime('%d/%m %H:%M')} (UTC)"
 
     plt.figure(figsize=(6, 4.48), dpi=100)
     plt.plot(times, prices, marker='o', linestyle='-', color='black', label='Electricity Price')
 
     # Nuclear reference line
-    plt.axhline(y=nuclear_ref, color='gray', linestyle='--', linewidth=1)
-    plt.text(len(times) - 1.5, nuclear_ref + 10, f'Nuclear Ref ({nuclear_ref} DKK/MWh)', fontsize=8, color='gray', ha='right')
+    plt.axhline(y=nuclear_ref_kwh, color='gray', linestyle='--', linewidth=1)
+    plt.text(len(times) - 1.5, nuclear_ref_kwh + 0.01, f'Nuclear Ref ({nuclear_ref_kwh:.2f} DKK/kWh)', fontsize=8, color='gray', ha='right')
 
-    # Annotate min and max with horizontal lines to y-axis
+    # Min/max horizontal lines
     min_val = min(prices)
     max_val = max(prices)
     plt.hlines(min_val, 0, prices.index(min_val), colors='blue', linestyles='--', linewidth=1)
     plt.hlines(max_val, 0, prices.index(max_val), colors='red', linestyles='--', linewidth=1)
-    plt.text(0, min_val, f'Min: {min_val:.1f}', va='bottom', fontsize=8, color='blue')
-    plt.text(0, max_val, f'Max: {max_val:.1f}', va='top', fontsize=8, color='red')
+    plt.text(0, min_val, f'Min: {min_val:.3f}', va='bottom', fontsize=8, color='blue')
+    plt.text(0, max_val, f'Max: {max_val:.3f}', va='top', fontsize=8, color='red')
 
+    # Labels
     plt.title(timestamp, fontsize=12)
     plt.xlabel("Time (UTC)", fontsize=10)
-    plt.ylabel("Price (DKK/MWh)", fontsize=10)
+    plt.ylabel("Price (DKK/kWh)", fontsize=10)
     plt.xticks(rotation=45, fontsize=8)
     plt.yticks(fontsize=8)
     plt.grid(True, linestyle='--', linewidth=0.5, alpha=0.7)
     plt.tight_layout()
 
+    # Output
     if save_path:
         plt.savefig(save_path, format='png', dpi=100)
     else:
@@ -54,7 +71,6 @@ def generate_plot(save_path=None, nuclear_ref=300):
         return buf
 
     plt.close()
-
 
 
 @app.route("/")
