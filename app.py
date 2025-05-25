@@ -45,7 +45,7 @@ def generate_plot(save_path=None, nuclear_ref=300):
     plt.tight_layout()
 
     if save_path:
-        plt.savefig(save_path, format='png', dpi=100)
+        plt.savefig(save_path, format='jpg', dpi=100)
     else:
         buf = BytesIO()
         plt.savefig(buf, format='png', dpi=100)
@@ -60,7 +60,7 @@ def generate_plot(save_path=None, nuclear_ref=300):
 @app.route("/")
 def graph_preview():
     buf = generate_plot()
-    return send_file(buf, mimetype='image/png')
+    return send_file(buf, mimetype='image/jpg')
 
 @app.route("/refresh")
 def refresh():
