@@ -48,7 +48,7 @@ def generate_plot(save_path=None, nuclear_ref=300):
         plt.savefig(save_path, format='jpg', dpi=100)
     else:
         buf = BytesIO()
-        plt.savefig(buf, format='png', dpi=100)
+        plt.savefig(buf, format='jpg', dpi=100)
         buf.seek(0)
         plt.close()
         return buf
@@ -65,12 +65,12 @@ def graph_preview():
 @app.route("/refresh")
 def refresh():
     os.makedirs("static", exist_ok=True)
-    generate_plot(save_path="static/graph.png")
+    generate_plot(save_path="static/graph.jpg")
     return "Graph updated!"
 
 @app.route("/image")
 def get_image():
-    return send_file("static/graph.png", mimetype="image/png")
+    return send_file("static/graph.jpg", mimetype="image/jpg")
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
