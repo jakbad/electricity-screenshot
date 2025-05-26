@@ -67,9 +67,9 @@ def generate_plot(save_path=None, nuclear_ref=300):
     # Sort chronologically
     records.sort(key=lambda x: x["HourUTC"])
 
-    # Define time window: from midnight 2 days ago to latest available
+    # Define time window: from midnight 1 days ago to latest available
     now = datetime.utcnow()
-    start_time = (now - timedelta(days=2)).replace(hour=0, minute=0, second=0, microsecond=0)
+    start_time = (now - timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
     end_time = max(datetime.fromisoformat(r["HourUTC"]) for r in records)
 
     filtered = [
