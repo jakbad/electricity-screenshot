@@ -8,7 +8,7 @@ import os
 app = Flask(__name__)
 
 def generate_plot(save_path=None, nuclear_ref=300):
-    url = "https://api.energidataservice.dk/dataset/Elspotprices?limit=48&filter={\"PriceArea\":\"DK2\"}&sort=HourUTC DESC"
+    url = "https://api.energidataservice.dk/dataset/Elspotprices?limit=24&filter={\"PriceArea\":\"DK2\"}&sort=HourUTC DESC"
     response = requests.get(url)
     data = response.json().get("records", [])
 
