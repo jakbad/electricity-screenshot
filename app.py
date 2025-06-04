@@ -15,7 +15,7 @@ import matplotlib.dates as mdates
 
 
 
-def generate_plot(save_path=None, nuclear_ref=300):
+def generate_plot(save_path=None, nuclear_ref=0.300):
     url = "https://api.energidataservice.dk/dataset/Elspotprices?limit=48&filter={\"PriceArea\":\"DK2\"}&sort=HourUTC DESC"
     response = requests.get(url)
     data = response.json().get("records", [])
