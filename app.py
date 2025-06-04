@@ -47,7 +47,9 @@ def generate_plot(save_path=None, nuclear_ref=300):
     # X-axis: show only hour (HH)
     ax.xaxis.set_major_locator(mdates.HourLocator(interval=1))
     ax.xaxis.set_major_formatter(mdates.DateFormatter('%H'))
+    plt.setp(ax.get_xticklabels(), rotation=45)
 
+    
     # Add vertical lines and date labels on date change
     previous_date = times_raw[0].date()
     for t in times_raw:
