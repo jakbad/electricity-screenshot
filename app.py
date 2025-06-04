@@ -5,43 +5,58 @@ from io import BytesIO
 from datetime import datetime, timedelta
 import os
 
-
-
 app = Flask(__name__)
 
-def generate_plot_old(save_path=None, nuclear_ref=300):
-    url = "https://api.energidataservice.dk/dataset/Elspotprices?limit=24&filter={\"PriceArea\":\"DK2\"}&sort=HourUTC DESC"
+import requests
+from datetime import datetime
+from io import BytesIO
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+
+def generate_plot(save_path=None, nuclear_ref=300):
+    url = "https://api.energidataservice.dk/dataset/Elspotprices?limit=48&filter={\"PriceArea\":\"DK2\"}&sort=HourUTC DESC"
     response = requests.get(url)
     data = response.json().get("records", [])
 
-    # Sort by HourUTC ascending
-    data.sort(key=lambda x: x["HourUTC"])
+    data.sort(key=lambda x: x["HourUTC"])  # Ascending
 
     times_raw = [datetime.fromisoformat(rec["HourUTC"]) for rec in data]
-    times = [t.strftime("%H:%M %d/%m") for t in times_raw]
     prices = [rec["SpotPriceDKK"] for rec in data]
 
     timestamp = datetime.now().strftime("Prices as of: %Y-%m-%d %H:%M")
 
-    plt.figure(figsize=(6, 4.48), dpi=100)
-    plt.plot(times, prices, marker='o', linestyle='-', color='black', label='Electricity Price')
+    fig, ax = plt.subplots(figsize=(6, 4.48), dpi=100)
+    ax.plot(times_raw, prices, marker='o', linestyle='-', color='black', label='Electricity Price')
 
     # Nuclear reference line
-    plt.axhline(y=nuclear_ref, color='gray', linestyle='--', linewidth=1)
-    plt.text(len(times) - 1.5, nuclear_ref + 10, f'Nuclear Ref ({nuclear_ref} DKK/MWh)', fontsize=8, color='gray', ha='right')
+    ax.axhline(y=nuclear_ref, color='gray', linestyle='--', linewidth=1)
+    ax.text(times_raw[-2], nuclear_ref + 10, f'Nuclear Ref ({nuclear_ref} DKK/MWh)', fontsize=8, color='gray', ha='right')
 
-    # Annotate min and max with horizontal lines to y-axis
-    min_val = min(prices)
-    max_val = max(prices)
-    plt.hlines(min_val, 0, prices.index(min_val), colors='blue', linestyles='--', linewidth=1)
-    plt.hlines(max_val, 0, prices.index(max_val), colors='red', linestyles='--', linewidth=1)
-    plt.text(0, min_val, f'Min: {min_val:.1f}', va='bottom', fontsize=8, color='blue')
-    plt.text(0, max_val, f'Max: {max_val:.1f}', va='top', fontsize=8, color='red')
+    # Min/max annotations
+    min_idx = prices.index(min(prices))
+    max_idx = prices.index(max(prices))
+    ax.hlines(prices[min_idx], xmin=times_raw[0], xmax=times_raw[min_idx], colors='blue', linestyles='--', linewidth=1)
+    ax.hlines(prices[max_idx], xmin=times_raw[0], xmax=times_raw[max_idx], colors='red', linestyles='--', linewidth=1)
+    ax.text(times_raw[0], prices[min_idx], f'Min: {prices[min_idx]:.1f}', va='bottom', fontsize=8, color='blue')
+    ax.text(times_raw[0], prices[max_idx], f'Max: {prices[max_idx]:.1f}', va='top', fontsize=8, color='red')
+
+    # X-axis formatting
+    ax.xaxis.set_major_locator(mdates.HourLocator(interval=1))  # Every hour
+    ax.xaxis.set_major_formatter(mdates.DateFormatter('%H'))    # Hour only
+
+    # Add vertical lines at date changes
+    previous_date = times_raw[0].date()
+    for i, t in enumerate(times_raw):
+        if t.date() != previous_date:
+            ax.axvline(x=t, color='gray', linestyle=':', linewidth=0.8)
+            ax.text(t, ax.get_ylim()[0], t.strftime('%d/%m'), fontsize=8,
+                    rotation=90, va='bottom', ha='right', color='gray', clip_on=True)
+            previous_date = t.date()
 
     plt.title(timestamp, fontsize=12)
-    plt.xlabel("Time (UTC)", fontsize=10)
+    plt.xlabel("Hour", fontsize=10)
     plt.ylabel("Price (DKK/MWh)", fontsize=10)
-    plt.xticks(rotation=45, fontsize=8)
+    plt.xticks(rotation=0, fontsize=8)
     plt.yticks(fontsize=8)
     plt.grid(True, linestyle='--', linewidth=0.5, alpha=0.7)
     plt.tight_layout()
