@@ -23,8 +23,10 @@ def generate_plot(save_path=None, nuclear_ref=300):
     data.sort(key=lambda x: x["HourUTC"])  # Ascending
 
     times_raw = [datetime.fromisoformat(rec["HourUTC"]) for rec in data]
-    prices = [rec["SpotPriceDKK"] for rec in data]
+#    prices = [rec["SpotPriceDKK"] for rec in data]
+    prices = [rec["SpotPriceDKK"] / 1000 for rec in data]
 
+    
     timestamp = datetime.now().strftime("Prices as of: %Y-%m-%d %H:%M")
 
     fig, ax = plt.subplots(figsize=(6, 4.48), dpi=100)
@@ -47,7 +49,7 @@ def generate_plot(save_path=None, nuclear_ref=300):
     # X-axis: show only hour (HH)
     ax.xaxis.set_major_locator(mdates.HourLocator(interval=1))
     ax.xaxis.set_major_formatter(mdates.DateFormatter('%H'))
-    plt.setp(ax.get_xticklabels(), rotation=45)
+    plt.setp(ax.get_xticklabels(), rotation=60)
 
     
     # Add vertical lines and date labels on date change
@@ -61,7 +63,9 @@ def generate_plot(save_path=None, nuclear_ref=300):
 
     ax.set_title(timestamp, fontsize=12)
     ax.set_xlabel("Hour (UTC)", fontsize=10)
-    ax.set_ylabel("Price (DKK/MWh)", fontsize=10)
+#    ax.set_ylabel("Price (DKK/MWh)", fontsize=10)
+    ax.set_ylabel("Price (DKK/kWh)", fontsize=10)
+
     ax.tick_params(axis='x', labelsize=8)
     ax.tick_params(axis='y', labelsize=8)
     ax.grid(True, linestyle='--', linewidth=0.5, alpha=0.7)
