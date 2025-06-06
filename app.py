@@ -46,7 +46,7 @@ def generate_plot(save_path=None, nuclear_ref=0.540):
     ax.axhline(y=min_val, color='blue', linestyle='--', linewidth=1)
     ax.axhline(y=max_val, color='red', linestyle='--', linewidth=1)
     ax.text(times_raw[-2], min_val+0.01, f' {min_val:.2f}', va='bottom', fontsize=8, color='blue')
-    ax.text(times_raw[-2], max_val+0.01, f' {max_val:.2f}', va='top', fontsize=8, color='red')
+    ax.text(times_raw[-2], max_val+0.01, f' {max_val:.2f}', va='bottom', fontsize=8, color='red')
 
     # X-axis: show only hour (HH)
     ax.xaxis.set_major_locator(mdates.HourLocator(interval=1))
