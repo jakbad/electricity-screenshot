@@ -41,10 +41,12 @@ def generate_plot(save_path=None, nuclear_ref=0.540):
     max_val = max(prices)
     min_idx = prices.index(min_val)
     max_idx = prices.index(max_val)
-    ax.hlines(min_val, xmin=times_raw[0], xmax=times_raw[min_idx], colors='blue', linestyles='--', linewidth=1)
-    ax.hlines(max_val, xmin=times_raw[0], xmax=times_raw[max_idx], colors='red', linestyles='--', linewidth=1)
-    ax.text(times_raw[-2], min_val, f' {min_val:.2f}', va='bottom', fontsize=8, color='blue')
-    ax.text(times_raw[-2], max_val, f' {max_val:.2f}', va='top', fontsize=8, color='red')
+#    ax.hlines(min_val, xmin=times_raw[0], xmax=times_raw[min_idx], colors='blue', linestyles='--', linewidth=1)
+#    ax.hlines(max_val, xmin=times_raw[0], xmax=times_raw[max_idx], colors='red', linestyles='--', linewidth=1)
+    ax.hlines(min_val, colors='blue', linestyles='--', linewidth=1)
+    ax.hlines(max_val, colors='red', linestyles='--', linewidth=1)
+    ax.text(times_raw[-2], min_val+0.01, f' {min_val:.2f}', va='bottom', fontsize=8, color='blue')
+    ax.text(times_raw[-2], max_val+0.01, f' {max_val:.2f}', va='top', fontsize=8, color='red')
 
     # X-axis: show only hour (HH)
     ax.xaxis.set_major_locator(mdates.HourLocator(interval=1))
@@ -58,7 +60,7 @@ def generate_plot(save_path=None, nuclear_ref=0.540):
         if t.date() != previous_date:
             ax.axvline(x=t, color='gray', linestyle=':', linewidth=1.0)
             ax.text(t, ax.get_ylim()[0], t.strftime('%d/%m'), fontsize=12,
-                    rotation=90, va='bottom', ha='center', color='gray', clip_on=True)
+                    rotation=90, va='bottom', ha='center', color='black', clip_on=True)
             previous_date = t.date()
 
     ax.set_title(timestamp, fontsize=10)
