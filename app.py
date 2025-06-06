@@ -43,8 +43,8 @@ def generate_plot(save_path=None, nuclear_ref=0.540):
     max_idx = prices.index(max_val)
     ax.hlines(min_val, xmin=times_raw[0], xmax=times_raw[min_idx], colors='blue', linestyles='--', linewidth=1)
     ax.hlines(max_val, xmin=times_raw[0], xmax=times_raw[max_idx], colors='red', linestyles='--', linewidth=1)
-    ax.text(times_raw[0], min_val, f'Min: {min_val:.1f}', va='bottom', fontsize=8, color='blue')
-    ax.text(times_raw[0], max_val, f'Max: {max_val:.1f}', va='top', fontsize=8, color='red')
+    ax.text(times_raw[0], min_val, f'Min: {min_val:.2f}', va='bottom', fontsize=8, color='blue')
+    ax.text(times_raw[0], max_val, f'Max: {max_val:.2f}', va='top', fontsize=8, color='red')
 
     # X-axis: show only hour (HH)
     ax.xaxis.set_major_locator(mdates.HourLocator(interval=1))
@@ -61,7 +61,7 @@ def generate_plot(save_path=None, nuclear_ref=0.540):
                     rotation=90, va='bottom', ha='center', color='gray', clip_on=True)
             previous_date = t.date()
 
-    ax.set_title(timestamp, fontsize=12)
+    ax.set_title(timestamp, fontsize=10)
     ax.set_xlabel("Hour (UTC)", fontsize=10)
 #    ax.set_ylabel("Price (DKK/MWh)", fontsize=10)
     ax.set_ylabel("Price (DKK/kWh)", fontsize=10)
