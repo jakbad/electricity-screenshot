@@ -34,7 +34,7 @@ def generate_plot(save_path=None, nuclear_ref=0.540):
 
     # Nuclear reference line
     ax.axhline(y=nuclear_ref, color='gray', linestyle='--', linewidth=1)
-    ax.text(times_raw[-2], nuclear_ref + 0.1, f'Nuclear Ref ({nuclear_ref} DKK/MWh)', fontsize=12, color='gray', ha='right')
+    ax.text(times_raw[-2], nuclear_ref + 0.01, f'Nuclear Ref ({nuclear_ref} DKK/MWh)', fontsize=8, color='gray', ha='right')
 
     # Min/max lines
     min_val = min(prices)
@@ -43,8 +43,8 @@ def generate_plot(save_path=None, nuclear_ref=0.540):
     max_idx = prices.index(max_val)
     ax.hlines(min_val, xmin=times_raw[0], xmax=times_raw[min_idx], colors='blue', linestyles='--', linewidth=1)
     ax.hlines(max_val, xmin=times_raw[0], xmax=times_raw[max_idx], colors='red', linestyles='--', linewidth=1)
-    ax.text(times_raw[0], min_val, f'Min: {min_val:.2f}', va='bottom', fontsize=8, color='blue')
-    ax.text(times_raw[0], max_val, f'Max: {max_val:.2f}', va='top', fontsize=8, color='red')
+    ax.text(times_raw[-2], min_val, f' {min_val:.2f}', va='bottom', fontsize=8, color='blue')
+    ax.text(times_raw[-2], max_val, f' {max_val:.2f}', va='top', fontsize=8, color='red')
 
     # X-axis: show only hour (HH)
     ax.xaxis.set_major_locator(mdates.HourLocator(interval=1))
