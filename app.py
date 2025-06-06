@@ -34,7 +34,7 @@ def generate_plot(save_path=None, nuclear_ref=0.540):
 
     # Nuclear reference line
     ax.axhline(y=nuclear_ref, color='gray', linestyle='--', linewidth=1)
-    ax.text(times_raw[-2], nuclear_ref + 10, f'Nuclear Ref ({nuclear_ref} DKK/MWh)', fontsize=8, color='gray', ha='right')
+    ax.text(times_raw[-2], nuclear_ref + 0.1, f'Nuclear Ref ({nuclear_ref} DKK/MWh)', fontsize=12, color='gray', ha='right')
 
     # Min/max lines
     min_val = min(prices)
@@ -56,8 +56,8 @@ def generate_plot(save_path=None, nuclear_ref=0.540):
     previous_date = times_raw[0].date()
     for t in times_raw:
         if t.date() != previous_date:
-            ax.axvline(x=t, color='gray', linestyle=':', linewidth=0.8)
-            ax.text(t, ax.get_ylim()[0], t.strftime('%d/%m'), fontsize=8,
+            ax.axvline(x=t, color='gray', linestyle=':', linewidth=1.0)
+            ax.text(t, ax.get_ylim()[0], t.strftime('%d/%m'), fontsize=12,
                     rotation=90, va='bottom', ha='center', color='gray', clip_on=True)
             previous_date = t.date()
 
