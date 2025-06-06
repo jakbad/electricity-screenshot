@@ -43,8 +43,8 @@ def generate_plot(save_path=None, nuclear_ref=0.540):
     max_idx = prices.index(max_val)
 #    ax.hlines(min_val, xmin=times_raw[0], xmax=times_raw[min_idx], colors='blue', linestyles='--', linewidth=1)
 #    ax.hlines(max_val, xmin=times_raw[0], xmax=times_raw[max_idx], colors='red', linestyles='--', linewidth=1)
-    ax.axhline(y=min_val, colors='blue', linestyles='--', linewidth=1)
-    ax.axhline(y=max_val, colors='red', linestyles='--', linewidth=1)
+    ax.axhline(y=min_val, color='blue', linestyle='--', linewidth=1)
+    ax.axhline(y=max_val, color='red', linestyle='--', linewidth=1)
     ax.text(times_raw[-2], min_val+0.01, f' {min_val:.2f}', va='bottom', fontsize=8, color='blue')
     ax.text(times_raw[-2], max_val+0.01, f' {max_val:.2f}', va='top', fontsize=8, color='red')
 
